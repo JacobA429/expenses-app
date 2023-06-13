@@ -77,6 +77,7 @@ class TestLogin:
 
         assert response.status_code == 401
         assert response.json['message'] == 'No user with email found'
+
     def test_login_returns_401_if_password_does_not_match(self, client):
         response = client.post('/auth/login', data=json.dumps({
             'password': 'wrong_password',
