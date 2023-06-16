@@ -8,7 +8,7 @@ def test_encode_token_returns_token(mocker):
 
     encode_mock.assert_called_once_with(
         {'exp': mocker.ANY, 'iat': mocker.ANY, 'sub': 1},
-        JwtService.secret_key,
+        'jwt_secret_key',
         algorithm='HS256'
     )
 
