@@ -17,15 +17,21 @@ def login_required(f):
                 "message": "Authentication Token is missing",
                 "error": "Unauthorized"
             }, 401
-        user_id = JwtService.decode_token(token)
-        current_user = User.query.filter_by(id=user_id).first()
+        try:
+            user_id = JwtService.decode_token(token)
+            current_user = User.query.filter_by(id=user_id).first()
 
-        if current_user is None:
+            if current_user is None:
+                return {
+                    "message": "Invalid Authentication token",
+                    "error": "Unauthorized"
+                }, 401
+
+            return f(current_user, *args, **kwargs)
+        except Exception:
             return {
                 "message": "Invalid Authentication token",
                 "error": "Unauthorized"
             }, 401
-
-        return f(current_user, *args, **kwargs)
 
     return wrap
