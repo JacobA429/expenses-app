@@ -1,18 +1,17 @@
 # backend/app/app.py
 
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 
 from backend import db
 from backend.routes import api_bp, auth_bp
-
-from config import DevelopmentConfig, TestingConfig, ProductionConfig
+from flask_cors import CORS
+from backend.config import DevelopmentConfig, TestingConfig, ProductionConfig
 
 
 def create_app(config_name='development'):
     """Create the Flask application instance."""
     app = Flask(__name__)
-
+    CORS(app)
     if config_name == 'development':
         app.config.from_object(DevelopmentConfig)
     elif config_name == 'testing':

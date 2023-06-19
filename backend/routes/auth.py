@@ -12,28 +12,21 @@ def signup_user():
     if request.method == 'GET':  # If the request is GET we return the
         # sign up page and forms
         return render_template('signup.html')
-    data = request.form
-    email, password, name = data.get('email'), data.get('password'), data.get('name')
+    data = request.get_json()
+    email, password, name = data['email'], data['password'], data['name']
     existing_user = User.query.filter_by(email=email).first()
     if existing_user:
         return make_response('A user already exists with the email', 409)
 
     new_user = User(email=email, password=password, name=name)
     new_user.create()
-    token = JwtService.encode_token(new_user.id)
-
-    r = render_template("index.html")
-    rr = make_response(r)
-
-    # Set the token as a header in the response
-    rr.headers['Authorization'] = 'Bearer ' + token
-    return rr
+    return make_response(jsonify(new_user.json()), 201)
 
 
 @auth_bp.route('/login', methods=['POST', 'GET'])
 def login_user():
-    data = request.form
-    email, password = data.get('email'), data.get('password')
+    data = request.get_json()
+    email, password = data['email'], data['password']
     if not email or not password:
         return make_response('Email or password missing', 401)
 
