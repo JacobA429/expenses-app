@@ -1,8 +1,10 @@
 # backend/models.py
 import bcrypt
+from sqlalchemy import ForeignKey
 from werkzeug.security import generate_password_hash
 
 from backend import db
+
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -11,6 +13,7 @@ class User(db.Model):
     name = db.Column(db.String(255))
     email = db.Column(db.String(255))
     password = db.Column(db.String(255))
+    couple_id = db.Column(db.Integer, db.ForeignKey('couples.id'))
 
     def __init__(self, name, email, password):
         self.name = name
@@ -21,6 +24,11 @@ class User(db.Model):
         db.session.add(self)
         db.session.commit()
         return self
+
+    def join_couple(self, couple_id):
+        self.couple_id = couple_id
+        db.session.add(self)
+        db.session.commit()
 
     def json(self):
         return {
@@ -34,30 +42,49 @@ class Couple(db.Model):
     __tablename__ = 'couples'
 
     id = db.Column(db.Integer, primary_key=True)
-    user1_id = db.Column(db.Integer)
-    user2_id = db.Column(db.Integer)
-
-
-    def __init__(self, user1_id, user2_id):
-        self.user1_id = user1_id
-        self.user2_id = user2_id
+    expenses = db.relationship("Expense", backref="couple", lazy="dynamic")
+    users = db.relationship('User', backref='couple')
 
     def create(self):
         db.session.add(self)
         db.session.commit()
         return self
 
-    @property
-    def user1(self) -> User:
-        return User.query.filter_by(id=self.user1_id).first()
+    def json(self):
+        return {
+            'id': self.id,
+            'user1': self.users[0].json(),
+            'user2': self.users[1].json()
+        }
 
-    @property
-    def user2(self) -> User:
-        return User.query.filter_by(id=self.user2_id).first()
+
+class Expense(db.Model):
+    __tablename__ = 'expenses'
+
+    id = db.Column(db.Integer, primary_key=True)
+    total = db.Column(db.Float)
+    created_at = db.Column(db.Date)
+    couple_id = db.Column(db.Integer, db.ForeignKey('couples.id'), nullable=False)
+    paid_by_user_id = db.Column(db.Integer, ForeignKey('users.id'))
+
+    def __init__(self, total, created_at, paidByUserId, coupleId):
+        self.total = total
+        self.paid_by_user_id = paidByUserId
+        self.created_at = created_at
+        self.couple_id = coupleId
+
+    def create(self):
+        db.session.add(self)
+        db.session.commit()
+        return self
+
+    def paid_for_by_user(self) -> User:
+        return User.query.filter_by(id=self.paid_by_user_id).first()
 
     def json(self):
         return {
             'id': self.id,
-            'user1': self.user1.json(),
-            'user2_id': self.user2.json(),
+            'total': self.total,
+            'created_at': self.created_at,
+            'paid_for_by_user': self.paid_for_by_user().json()
         }

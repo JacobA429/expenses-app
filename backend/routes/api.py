@@ -11,10 +11,16 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 def test():
     return {"message": "Hello World"}
 
-@api_bp.route('/user', methods=['GET'])
+
+@api_bp.route('/expenses', methods=['GET'])
 @login_required
-def user(current_user: User):
-    return jsonify(current_user.json())
+def get_expenses(current_user: User):
+    expenses = current_user.couple.expenses
+    json_expenses = []
+    for expense in expenses:
+        json_expenses.append(expense.json())
+    return jsonify({'expenses': json_expenses})
+
 
 
 @api_bp.route('/partner_link', methods=['GET'])
@@ -35,7 +41,9 @@ def join(code):
 @api_bp.route('/create_couple', methods=['POST'])
 def create_couple():
     data = request.get_json()
-    user1_id, user2_id = data['user1_id'], data['user2_id']
-    new_couple = Couple(user1_id= user1_id, user2_id=user2_id)
-    new_couple.create()
+    user1 = User.query.filter_by(id=data['user1_id']).first()
+    user2 = User.query.filter_by(id=data['user2_id']).first()
+    new_couple = Couple().create()
+    user1.join_couple(new_couple.id)
+    user2.join_couple(new_couple.id)
     return jsonify(new_couple.json())

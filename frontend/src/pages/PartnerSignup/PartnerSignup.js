@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { FormLayout, Page, TextField, Button, Form, Text, LegacyStack } from '@shopify/polaris';
+import { FormLayout, Page, TextField, Button, Form, Text } from '@shopify/polaris';
 import axios from 'axios'
 import { useParams } from 'react-router-dom';
 
@@ -36,7 +36,7 @@ function PartnerSignup() {
         };
 
         fetchData();
-    }, []);
+    }, [token]);
 
     const handleSubmit = () => {
         axios.post('/auth/signup', { 'email': email, 'password': password, 'name': name }).then(response => {

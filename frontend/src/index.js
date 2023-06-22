@@ -3,12 +3,12 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import Signup from './pages/Signup/Signup';
+import { Signup } from './pages/Signup';
 import { AppProvider } from '@shopify/polaris'
 import '@shopify/polaris/build/esm/styles.css';
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import InviteLink from './pages/InviteLink/InviteLink';
-import PartnerSignup from './pages/PartnerSignup/PartnerSignup';
+import { InviteLink } from './pages/InviteLink';
+import { PartnerSignup } from './pages/PartnerSignup';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

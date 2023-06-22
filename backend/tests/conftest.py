@@ -3,6 +3,7 @@ from flask import Flask
 from sqlalchemy.orm import sessionmaker
 
 from backend.app import create_app, db as _db
+from backend.models import User
 
 
 class TestConfig(object):
@@ -49,3 +50,13 @@ def session(db):
     transaction.rollback()
     connection.close()
     db.session.remove()
+
+@pytest.fixture
+def user1():
+    return User(name='John Doe', email='john@example.com', password='password').create()
+
+@pytest.fixture
+def user2():
+    return User(name='Jane Doe', email='jane@example.com', password='password').create()
+
+
