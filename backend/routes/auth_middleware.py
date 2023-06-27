@@ -28,10 +28,10 @@ def login_required(f):
                 }, 401
 
             return f(current_user, *args, **kwargs)
-        except Exception:
+        except Exception as e:
             return {
                 "message": "Invalid Authentication token",
-                "error": "Unauthorized"
+                "error": e.args
             }, 401
 
     return wrap

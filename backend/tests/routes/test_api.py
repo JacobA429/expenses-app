@@ -42,6 +42,7 @@ class TestPartnerLink:
         assert response.status_code == 401
 
 
+@pytest.mark.join
 class TestJoin:
     @pytest.fixture
     def mock_decode_invite_token(self, mocker, user1):
@@ -58,8 +59,9 @@ class TestJoin:
         assert response.json['user1']['email'], 'john@example.com'
 
 
+@pytest.mark.create_couple
 class TestCreateCouple:
-    def test_create_couple(self, client, user1,user2):
+    def test_create_couple(self, client, user1, user2):
         response = client.post('/api/create_couple',
                                data=json.dumps({
                                    'user1_id': user1.id,
@@ -78,8 +80,10 @@ class TestCreateCouple:
         assert couple.users is not None
 
 
+@pytest.mark.expenses
 class TestExpenses:
     couple = None
+
     @pytest.fixture(autouse=True)
     def setup(self, user1, user2):
         self.couple = Couple().create()
@@ -93,22 +97,23 @@ class TestExpenses:
         mock_token.return_value = user1.id
 
     def test_returns_all_expenses_for_couple(self, client, mock_decode_token, user1, user2):
-
         Expense(
             total=40.0,
-            coupleId=self.couple.id,
+            title='Expense 1',
+            couple_id=self.couple.id,
             created_at=datetime.datetime(2023, 5, 17),
-            paidByUserId=user1.id
+            paid_by_user_id=user1.id
         ).create()
 
         Expense(
             total=10.0,
-            coupleId=self.couple.id,
+            title='Expense 2',
+            couple_id=self.couple.id,
             created_at=datetime.datetime(2023, 1, 1),
-            paidByUserId=user2.id
+            paid_by_user_id=user2.id
         ).create()
 
-        response = client.get('/api/expenses',
+        response = client.get('/api/expenses/all',
                               headers={
                                   'Content-Type': 'application/json',
                                   'Authorization': f'Bearer TOKEN'
@@ -119,7 +124,7 @@ class TestExpenses:
         assert len(response.json['expenses']) == 2
 
     def test_expenses_return_empty_array_if_no_expenses(self, client, mock_decode_token):
-        response = client.get('/api/expenses',
+        response = client.get('/api/expenses/all',
                               headers={
                                   'Content-Type': 'application/json',
                                   'Authorization': f'Bearer TOKEN'
@@ -128,3 +133,35 @@ class TestExpenses:
 
         assert response.status_code == 200
         assert len(response.json['expenses']) == 0
+
+
+@pytest.mark.create_expenses
+class TestCreateExpense:
+    couple = None
+
+    @pytest.fixture
+    def mock_decode_token(self, mocker, user1):
+        # Mock JwtService.decode_token
+        mock_token = mocker.patch('backend.services.JwtService.decode_token')
+        mock_token.return_value = user1.id
+
+    @pytest.fixture(autouse=True)
+    def setup(self, user1, user2):
+        self.couple = Couple().create()
+        user1.join_couple(couple_id=self.couple.id)
+        user2.join_couple(couple_id=self.couple.id)
+
+    def test_creates_expense(self, client, mock_decode_token, user1):
+        response = client.post('/api/expenses/create', data=json.dumps({
+            'title': 'Expense 1',
+            'total': 50.0,
+            'created_at': '2023-06-23',
+            'paid_by_user_id': user1.id
+        }), headers={
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer TOKEN'
+        })
+
+        created_expense = Expense.query.filter_by(couple_id=user1.couple_id).first()
+        assert response.status_code == 200
+        assert response.json['expense']['id'] == created_expense.id

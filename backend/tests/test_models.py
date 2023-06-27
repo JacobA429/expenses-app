@@ -34,16 +34,18 @@ class TestCouple:
 
         Expense(
             total=40.0,
-            coupleId=couple.id,
+            title='Expense 1',
+            couple_id=couple.id,
             created_at=datetime.datetime(2023, 5, 17),
-            paidByUserId=user1.id
+            paid_by_user_id=user1.id
         ).create()
 
         Expense(
             total=10.0,
-            coupleId=couple.id,
+            title='Expense 2',
+            couple_id=couple.id,
             created_at=datetime.datetime(2023, 1, 1),
-            paidByUserId=user2.id
+            paid_by_user_id=user2.id
         ).create()
 
         assert couple.expenses.count() == 2

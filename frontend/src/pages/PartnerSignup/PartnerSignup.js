@@ -41,7 +41,6 @@ function PartnerSignup() {
     const handleSubmit = () => {
         axios.post('/auth/signup', { 'email': email, 'password': password, 'name': name }).then(response => {
             axios.post('/api/create_couple', { 'user1_id': user1.id, 'user2_id': response.data.id }).then(response => {
-                console.log(response.data)
                 axios.post('/auth/login', { 'email': email, 'password': password }).then(response => {
                     localStorage.setItem('auth_token', response.data.token)
                 }).catch(error => {

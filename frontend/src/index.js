@@ -9,6 +9,8 @@ import '@shopify/polaris/build/esm/styles.css';
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { InviteLink } from './pages/InviteLink';
 import { PartnerSignup } from './pages/PartnerSignup';
+import { ExpenseForm } from './pages/ExpenseForm';
+import { Home } from './pages/Home';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -19,6 +21,8 @@ root.render(
         <Route path="signup" element={<Signup />} />
         <Route path="invite" element={<InviteLink />} />
         <Route path="join/:token" element={<PartnerSignup />} />
+        <Route path="home" element={<Home />} />
+        <Route path='expenses/create' element={<ExpenseForm />} />
       </Routes>
     </BrowserRouter>
   </AppProvider>,

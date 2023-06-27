@@ -1,8 +1,10 @@
+from datetime import datetime
+
 from flask import Blueprint, jsonify, request, url_for
 
-from backend.models import User, Couple
+from backend.models import User, Couple, Expense
 from backend.routes.auth_middleware import login_required
-from backend.services import PartnerInviteService
+from backend.services import PartnerInviteService, UserBalanceCalculator
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -12,7 +14,7 @@ def test():
     return {"message": "Hello World"}
 
 
-@api_bp.route('/expenses', methods=['GET'])
+@api_bp.route('/expenses/all', methods=['GET'])
 @login_required
 def get_expenses(current_user: User):
     expenses = current_user.couple.expenses
@@ -20,6 +22,38 @@ def get_expenses(current_user: User):
     for expense in expenses:
         json_expenses.append(expense.json())
     return jsonify({'expenses': json_expenses})
+
+@api_bp.route('/user/balance', methods=['GET'])
+@login_required
+def user_balance(current_user: User):
+    expenses = current_user.couple.expenses
+    balance = UserBalanceCalculator.balance_for_user(current_user, expenses)
+    return jsonify({'balance': balance})
+
+
+@api_bp.route('/couple', methods=['GET'])
+@login_required
+def couple(current_user: User):
+    couple = current_user.couple
+    return jsonify({'couple': couple.json()})
+
+@api_bp.route('/expenses/create', methods=['POST'])
+@login_required
+def create_expense(current_user: User):
+    data = request.get_json()
+
+    total, created_at, paid_by_user_id = data['total'], data['created_at'], data['paid_by_user_id']
+    title = data['title']
+    expense = Expense(
+        title=title,
+        total=total,
+        created_at=datetime.strptime(created_at, '%a %b %d %Y').date(),
+        paid_by_user_id=paid_by_user_id,
+        couple_id=current_user.couple_id
+    ).create()
+
+    return(jsonify({'expense': expense.json() }))
+
 
 
 
@@ -38,7 +72,7 @@ def join(code):
     return jsonify({'user1': signed_up_user.json()})
 
 
-@api_bp.route('/create_couple', methods=['POST'])
+@api_bp.route('/couple/create', methods=['POST'])
 def create_couple():
     data = request.get_json()
     user1 = User.query.filter_by(id=data['user1_id']).first()
