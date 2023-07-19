@@ -62,7 +62,7 @@ class TestJoin:
 @pytest.mark.create_couple
 class TestCreateCouple:
     def test_create_couple(self, client, user1, user2):
-        response = client.post('/api/create_couple',
+        response = client.post('/api/couple/create',
                                data=json.dumps({
                                    'user1_id': user1.id,
                                    'user2_id': user2.id
@@ -73,7 +73,6 @@ class TestCreateCouple:
                                )
 
         couple_id = response.json['id']
-
         couple = Couple.query.filter_by(id=couple_id).first()
         assert couple_id is not None
         assert couple is not None
@@ -155,7 +154,7 @@ class TestCreateExpense:
         response = client.post('/api/expenses/create', data=json.dumps({
             'title': 'Expense 1',
             'total': 50.0,
-            'created_at': '2023-06-23',
+            'created_at': 'Fri Jun 23 2023',
             'paid_by_user_id': user1.id
         }), headers={
             'Content-Type': 'application/json',

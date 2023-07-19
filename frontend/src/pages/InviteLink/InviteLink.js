@@ -6,7 +6,6 @@ function InviteLink() {
 
     const [partnerLink, setPartnerLink] = useState('');
     useEffect(() => {
-        // Function to call the API
         const fetchData = async () => {
             try {
                 const auth_token = localStorage.getItem('auth_token')

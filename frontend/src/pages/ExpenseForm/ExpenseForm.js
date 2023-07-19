@@ -1,10 +1,21 @@
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useState, useCallback } from 'react'
 import { FormLayout, Page, TextField, Button, Form, DatePicker, Text, ChoiceList, Frame, Loading, Toast } from '@shopify/polaris';
-import axios from 'axios'
 import { useNavigate } from 'react-router-dom';
+import { useMutation, useQuery } from "react-query";
+import apis from '../../apis';
 
 function ExpenseForm() {
-    const [users, setUsers] = useState(null)
+    const { data: couple } = useQuery("couple", apis.fetchCouple)
+    const { mutate } = useMutation(apis.createExpense, {
+        onSuccess: data => {
+            toggleExpenseCreated()
+            navigate('/home', { replace: true })
+        },
+
+        onError: () => {
+            alert("There was an error")
+        }
+    })
     const today = new Date()
     const [title, setTitle] = useState("");
     const [total, setTotal] = useState(0.0);
@@ -24,51 +35,14 @@ function ExpenseForm() {
     );
 
     const navigate = useNavigate();
-    const [authToken, setAuthToken] = useState('');
+
     const handleTitleChange = useCallback((value) => setTitle(value), []);
     const handleTotalChange = useCallback((value) => setTotal(value), []);
 
-    useEffect(() => {
-        setAuthToken(localStorage.getItem('auth_token'))
-        const fetchCouple = async () => {
-            try {
-
-                const fetchData = async () => {
-                    try {
-                        if (authToken) {
-                            const response = await axios.get('/api/couple',
-                                { headers: { 'Authorization': `Bearer ${authToken}` } })
-                            const couple = response.data.couple
-                            setUsers([couple.user1, couple.user2])
-                        }
-                    } catch (error) {
-                        console.error('Error fetching data:', error);
-                    }
-                };
-
-                // Call the API when the component mounts
-                fetchData();
-            } catch (error) {
-                // Handle any network or other errors
-                console.error('Error:', error);
-            }
-        };
-
-        fetchCouple();
-    }, []);
-
     const handleSubmit = () => {
-        axios.post('/api/expenses/create', {
-            'title': title,
-            'total': total,
-            'created_at': selectedDates.start.toDateString(),
-            'paid_by_user_id': selectedUser[0]
-        }, { headers: { 'Authorization': `Bearer ${authToken}` } }).then(response => {
-            toggleExpenseCreated()
-            navigate('/home', { replace: true })
-        }).catch(error => {
-            console.log(error)
-        })
+        const created_at = selectedDates.start.toDateString()
+        const paid_by_user_id = selectedUser[0]
+        mutate({ title, total, created_at, paid_by_user_id })
     }
 
     const [selectedUser, setSelectedUser] = useState('hidden');
@@ -81,15 +55,9 @@ function ExpenseForm() {
     ) : null;
 
     let userNameChoices = []
-    if (users) {
-        userNameChoices = users.map((u) => { return { label: u.name, value: u.id } })
+    if (couple) {
+        userNameChoices = [couple.user1, couple.user2].map((u) => { return { label: u.name, value: u.id } })
     }
-
-    const loadingIndicationRender = <div style={{ height: '100px' }}>
-        <Frame>
-            <Loading />
-        </Frame>
-    </div>
 
     const contentRender =
         <Frame>
@@ -108,9 +76,9 @@ function ExpenseForm() {
                             onChange={handleTotalChange}
                             autoComplete="off"
                         />
-                        {users && <ChoiceList
+                        {couple && <ChoiceList
                             allowMultiple={false}
-                            title="Company name"
+                            title="Select who paid"
                             choices={userNameChoices}
                             selected={selectedUser}
                             onChange={handleChange}
@@ -133,7 +101,7 @@ function ExpenseForm() {
             </Page>
         </Frame>
 
-    return users ? contentRender : loadingIndicationRender
+    return contentRender
 }
 
 export default ExpenseForm;

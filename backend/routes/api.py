@@ -8,21 +8,6 @@ from backend.services import PartnerInviteService, UserBalanceCalculator
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
-
-@api_bp.route('/test', methods=['GET'])
-def test():
-    return {"message": "Hello World"}
-
-
-@api_bp.route('/expenses/all', methods=['GET'])
-@login_required
-def get_expenses(current_user: User):
-    expenses = current_user.couple.expenses
-    json_expenses = []
-    for expense in expenses:
-        json_expenses.append(expense.json())
-    return jsonify({'expenses': json_expenses})
-
 @api_bp.route('/user/balance', methods=['GET'])
 @login_required
 def user_balance(current_user: User):
@@ -30,12 +15,16 @@ def user_balance(current_user: User):
     balance = UserBalanceCalculator.balance_for_user(current_user, expenses)
     return jsonify({'balance': balance})
 
-
 @api_bp.route('/couple', methods=['GET'])
 @login_required
 def couple(current_user: User):
     couple = current_user.couple
     return jsonify({'couple': couple.json()})
+
+@api_bp.route('/user/current', methods=['GET'])
+@login_required
+def user(current_user: User):
+    return jsonify({'user': current_user.json()})
 
 @api_bp.route('/expenses/create', methods=['POST'])
 @login_required

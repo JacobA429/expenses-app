@@ -1,110 +1,110 @@
-import React, { useEffect, useState } from 'react'
-import { Page, LegacyCard, DataTable, EmptyState, Text, VerticalStack } from '@shopify/polaris';
-import axios from 'axios'
+import React from 'react'
+import { Page, LegacyCard, Link, DataTable, FooterHelp, Text, VerticalStack, Button, HorizontalStack } from '@shopify/polaris';
 import { useNavigate } from 'react-router-dom';
-
+import { useQuery } from "react-query";
+import apis from '../../apis';
+import { EmptyView } from './components';
 
 function Home() {
     const navigate = useNavigate();
-    const [expenses, setExpenses] = useState([])
-    const [balance, setBalance] = useState(0)
+    const { data: couple, isLoading: coupleLoading } = useQuery("couple", apis.fetchCouple)
+    const { data: currentUser, isLoading: userLoading } = useQuery("currentUser", apis.fetchCurrentUser)
+    const { data: balance, isLoading: balanceLoading } = useQuery("balance", apis.fetchBalance)
 
     const handleCreateExpense = () => {
         navigate('/expenses/create', { replace: false })
     }
 
+    const signOutUser = () => {
+        localStorage.removeItem("auth_token");
+    }
+
+    const allUsersLoaded = !!(couple && currentUser)
+
+    if (coupleLoading || userLoading || balanceLoading || !allUsersLoaded) {
+        return
+    }
+    let partnerUser = null
+    if (currentUser.id == couple.user1.id) {
+        partnerUser = couple.user2
+    } else {
+        partnerUser = couple.user1
+    }
+
+    let balanceText = null; // Initialize balanceText as null
+
+    if (balance && balance > 0) {
+        balanceText = (
+            <Text variant="heading2xl" as="p" color="success">
+                {partnerUser?.name} owes you ${Math.abs(balance)}!
+            </Text>
+        );
+    } else if (balance && balance < 0) {
+        balanceText = (
+            <Text variant="heading2xl" as="p" color="critical">
+                You need to pay {partnerUser?.name} ${Math.abs(balance)}
+            </Text>
+        );
+    } else {
+        balanceText = (
+            <Text variant="heading2xl" as="p">
+                Balance is $0
+            </Text>
+        );
+    }
+
+
+    const expenses = couple && couple.expenses
+    const hasExpenses = expenses && expenses.length > 0 || false;
     let tableRowData = []
     let totalCount = 0
-    if (expenses) {
-        tableRowData = expenses.map((expense) => [expense.title, new Date(expense.created_at).toDateString(), expense.paid_for_by_user.name, expense.total])
+    if (hasExpenses) {
+        tableRowData = expenses.map((expense) => [expense.title, new Date(expense.created_at).toDateString(), expense.paid_for_by_user.name, `$${expense.total}`])
         totalCount = expenses.reduce((accumulator, item) => accumulator + item.total, 0);
     }
 
-    useEffect(() => {
-        const authToken = localStorage.getItem('auth_token')
-
-        const fetchExpenses = async () => {
-            try {
-
-                const fetchData = async () => {
-                    try {
-                        if (authToken) {
-                            const expensesResponse = await axios.get('/api/expenses/all',
-                                { headers: { 'Authorization': `Bearer ${authToken}` } })
-                            const apiExpenses = expensesResponse.data.expenses
-                            setExpenses(apiExpenses)
-
-                            const balanceResponse = await axios.get('/api/user/balance',
-                                { headers: { 'Authorization': `Bearer ${authToken}` } })
-                            setBalance(balanceResponse.data['balance'])
-
-                        }
-                    } catch (error) {
-                        console.error('Error fetching data:', error);
-                    }
-                };
-
-                // Call the API when the component mounts
-                fetchData();
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        };
-
-        fetchExpenses();
-    }, []);
-
-    const emptyState = <LegacyCard sectioned>
-        <EmptyState
-            heading="No Expenses to report"
-            image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
-        >
-            <p>Create an expense to get started</p>
-        </EmptyState>
-    </LegacyCard>
-
-    const balanceOwedText = balance && <Text variant="heading2xl" as="p" color="success">
-        You are owed ${balance}!
-    </Text>
-
-    const balanceOweText = balance && <Text variant="heading2xl" as="p" color="critical">
-        You are owed ${balance}!
-    </Text>
-
 
     return (
-        <>
-            <Page
-                title="Expenses"
-                primaryAction={{ content: 'Create Expense', onAction: handleCreateExpense }}
-            >
-                <VerticalStack gap="10">
-                    {balance > 0 ? balanceOwedText : balanceOweText}
-                    { }
-                    {expenses.length > 0 ?
-                        <LegacyCard>
-                            <DataTable
-                                columnContentTypes={[
-                                    'text',
-                                    'numeric',
-                                    'numeric',
-                                    'numeric',
-                                ]}
-                                headings={[
-                                    'Title',
-                                    'Date created',
-                                    'Paid By',
-                                    'Total Cost',
-                                ]}
-                                rows={tableRowData}
-                                totalsName={'Total Cost'}
-                                totals={['', '', '', "$" + totalCount]}
-                                showTotalsInFooter
-                            />
-                        </LegacyCard> : emptyState}
-                </VerticalStack>
-            </Page>
-        </>
+        allUsersLoaded && <Page
+            title="Expenses"
+            subtitle={`Hello ${currentUser.name}`}
+        >
+            <VerticalStack gap="10">
+                <HorizontalStack align='space-between'>
+                    {balanceText}
+                    <Button primary size="large" onClick={handleCreateExpense}>
+                        Create Expense
+                    </Button>
+                </HorizontalStack>
+                { }
+                {hasExpenses ?
+                    <LegacyCard>
+                        <DataTable
+                            columnContentTypes={[
+                                'text',
+                                'numeric',
+                                'numeric',
+                                'numeric',
+                            ]}
+                            headings={[
+                                'Title',
+                                'Date created',
+                                'Paid By',
+                                'Total Cost',
+                            ]}
+                            rows={tableRowData}
+                            totalsName={'Total Cost'}
+                            totals={['', '', '', "$" + totalCount]}
+                            showTotalsInFooter
+                        />
+                    </LegacyCard> : <EmptyView />}
+            </VerticalStack>
+            <FooterHelp>
+                <Button plain monochrome onClick={signOutUser}>
+                    Sign Out
+                </Button>
+            </FooterHelp>
+        </Page>
     )
 }
 

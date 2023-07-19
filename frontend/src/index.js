@@ -11,24 +11,24 @@ import { InviteLink } from './pages/InviteLink';
 import { PartnerSignup } from './pages/PartnerSignup';
 import { ExpenseForm } from './pages/ExpenseForm';
 import { Home } from './pages/Home';
+import { QueryClient, QueryClientProvider } from 'react-query'
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+const queryClient = new QueryClient()
+
 root.render(
   <AppProvider>
-    <BrowserRouter>
-      <Routes>
-        <Route index element={<App />} />
-        <Route path="signup" element={<Signup />} />
-        <Route path="invite" element={<InviteLink />} />
-        <Route path="join/:token" element={<PartnerSignup />} />
-        <Route path="home" element={<Home />} />
-        <Route path='expenses/create' element={<ExpenseForm />} />
-      </Routes>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route index element={<App />} />
+          <Route path="signup" element={<Signup />} />
+          <Route path="invite" element={<InviteLink />} />
+          <Route path="join/:token" element={<PartnerSignup />} />
+          <Route path="home" element={<Home />} />
+          <Route path='expenses/create' element={<ExpenseForm />} />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
   </AppProvider>,
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
