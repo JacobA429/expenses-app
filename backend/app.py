@@ -3,7 +3,7 @@
 from flask import Flask
 
 from backend import db
-from backend.routes import api_bp, auth_bp
+from backend.routes import api_bp, auth_bp, user_api_bp, couple_api_bp
 from flask_cors import CORS
 from backend.config import DevelopmentConfig, TestingConfig, ProductionConfig
 
@@ -23,6 +23,8 @@ def create_app(config_name='development'):
 
     db.init_app(app)
     app.register_blueprint(api_bp)
+    app.register_blueprint(user_api_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(couple_api_bp)
 
     return app

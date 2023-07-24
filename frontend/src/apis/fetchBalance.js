@@ -4,6 +4,7 @@ import authToken from './config'
 
 const fetchBalance = async () => {
     try {
+        const authToken = localStorage.getItem('auth_token')
         const response = await axios.get('/api/user/balance',
             { headers: { 'Authorization': `Bearer ${authToken}` } })
         return response.data['balance']

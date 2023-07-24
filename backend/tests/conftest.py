@@ -30,6 +30,7 @@ def app():
 def client(app):
     return app.test_client()
 
+
 @pytest.yield_fixture(scope='session')
 def db(app):
     _db.app = app
@@ -51,12 +52,18 @@ def session(db):
     connection.close()
     db.session.remove()
 
+
 @pytest.fixture
 def user1():
     return User(name='John Doe', email='john@example.com', password='password').create()
+
 
 @pytest.fixture
 def user2():
     return User(name='Jane Doe', email='jane@example.com', password='password').create()
 
-
+@pytest.fixture(scope='function')
+def mock_decode_token(mocker, user1):
+    # Mock JwtService.decode_token
+    mock_token = mocker.patch('backend.services.JwtService.decode_token')
+    mock_token.return_value = user1.id

@@ -1,23 +1,25 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Page, LegacyCard, Link, DataTable, FooterHelp, Text, VerticalStack, Button, HorizontalStack } from '@shopify/polaris';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from "react-query";
 import apis from '../../apis';
-import { EmptyView } from './components';
+import { EmptyView, SignoutButton } from './components';
+
 
 function Home() {
     const navigate = useNavigate();
-    const { data: couple, isLoading: coupleLoading } = useQuery("couple", apis.fetchCouple)
-    const { data: currentUser, isLoading: userLoading } = useQuery("currentUser", apis.fetchCurrentUser)
-    const { data: balance, isLoading: balanceLoading } = useQuery("balance", apis.fetchBalance)
-
+    const { data: couple, isLoading: coupleLoading, refetch: coupleRefetch } = useQuery("couple", apis.fetchCouple, { enabled: false })
+    const { data: currentUser, isLoading: userLoading, refetch: userRefetch } = useQuery("currentUser", apis.fetchCurrentUser, { enabled: false })
+    const { data: balance, isLoading: balanceLoading, refetch: balanceRefetch } = useQuery("balance", apis.fetchBalance, { enabled: false })
     const handleCreateExpense = () => {
         navigate('/expenses/create', { replace: false })
     }
 
-    const signOutUser = () => {
-        localStorage.removeItem("auth_token");
-    }
+    useEffect(() => {
+        coupleRefetch()
+        userRefetch()
+        balanceRefetch()
+    }, [userRefetch, coupleRefetch, balanceRefetch]);
 
     const allUsersLoaded = !!(couple && currentUser)
 
@@ -66,8 +68,7 @@ function Home() {
 
     return (
         allUsersLoaded && <Page
-            title="Expenses"
-            subtitle={`Hello ${currentUser.name}`}
+            title={`Welcome ${currentUser.name}`}
         >
             <VerticalStack gap="10">
                 <HorizontalStack align='space-between'>
@@ -100,9 +101,7 @@ function Home() {
                     </LegacyCard> : <EmptyView />}
             </VerticalStack>
             <FooterHelp>
-                <Button plain monochrome onClick={signOutUser}>
-                    Sign Out
-                </Button>
+                <SignoutButton />
             </FooterHelp>
         </Page>
     )

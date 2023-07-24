@@ -41,7 +41,6 @@ class TestPartnerLink:
 
         assert response.status_code == 401
 
-
 @pytest.mark.join
 class TestJoin:
     @pytest.fixture
@@ -58,27 +57,6 @@ class TestJoin:
                               )
         assert response.json['user1']['email'], 'john@example.com'
 
-
-@pytest.mark.create_couple
-class TestCreateCouple:
-    def test_create_couple(self, client, user1, user2):
-        response = client.post('/api/couple/create',
-                               data=json.dumps({
-                                   'user1_id': user1.id,
-                                   'user2_id': user2.id
-                               }),
-                               headers={
-                                   'Content-Type': 'application/json',
-                               }
-                               )
-
-        couple_id = response.json['id']
-        couple = Couple.query.filter_by(id=couple_id).first()
-        assert couple_id is not None
-        assert couple is not None
-        assert couple.users is not None
-
-
 @pytest.mark.expenses
 class TestExpenses:
     couple = None
@@ -94,44 +72,6 @@ class TestExpenses:
         # Mock JwtService.decode_token
         mock_token = mocker.patch('backend.services.JwtService.decode_token')
         mock_token.return_value = user1.id
-
-    def test_returns_all_expenses_for_couple(self, client, mock_decode_token, user1, user2):
-        Expense(
-            total=40.0,
-            title='Expense 1',
-            couple_id=self.couple.id,
-            created_at=datetime.datetime(2023, 5, 17),
-            paid_by_user_id=user1.id
-        ).create()
-
-        Expense(
-            total=10.0,
-            title='Expense 2',
-            couple_id=self.couple.id,
-            created_at=datetime.datetime(2023, 1, 1),
-            paid_by_user_id=user2.id
-        ).create()
-
-        response = client.get('/api/expenses/all',
-                              headers={
-                                  'Content-Type': 'application/json',
-                                  'Authorization': f'Bearer TOKEN'
-                              }
-                              )
-
-        assert response.status_code == 200
-        assert len(response.json['expenses']) == 2
-
-    def test_expenses_return_empty_array_if_no_expenses(self, client, mock_decode_token):
-        response = client.get('/api/expenses/all',
-                              headers={
-                                  'Content-Type': 'application/json',
-                                  'Authorization': f'Bearer TOKEN'
-                              }
-                              )
-
-        assert response.status_code == 200
-        assert len(response.json['expenses']) == 0
 
 
 @pytest.mark.create_expenses

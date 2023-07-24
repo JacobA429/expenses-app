@@ -1,7 +1,7 @@
 import axios from 'axios'
-import authToken from './config'
 
 const createExpense = (data) => {
+    const authToken = localStorage.getItem('auth_token')
     axios.post('/api/expenses/create', { ...data }, { headers: { 'Authorization': `Bearer ${authToken}` } }).then(response => {
         return response.data
     }).catch(error => {

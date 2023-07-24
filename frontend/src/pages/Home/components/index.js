@@ -1,2 +1,3 @@
 import EmptyView from './EmptyView/EmptyView'
-export { EmptyView }
+import SignoutButton from './SignoutButton/SignoutButton'
+export { EmptyView, SignoutButton }

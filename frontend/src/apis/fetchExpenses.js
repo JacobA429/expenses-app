@@ -1,8 +1,8 @@
 import axios from 'axios'
-import authToken from './config'
 
 const fetchExpenses = async () => {
     try {
+        const authToken = localStorage.getItem('auth_token')
         const response = await axios.get('/api/expenses/all',
             { headers: { 'Authorization': `Bearer ${authToken}` } })
         return response.data.expenses

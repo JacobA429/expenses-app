@@ -7,7 +7,7 @@ import apis from '../../apis';
 function ExpenseForm() {
     const { data: couple } = useQuery("couple", apis.fetchCouple)
     const { mutate } = useMutation(apis.createExpense, {
-        onSuccess: data => {
+        onSuccess: () => {
             toggleExpenseCreated()
             navigate('/home', { replace: true })
         },
